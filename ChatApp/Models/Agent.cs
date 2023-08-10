@@ -2,19 +2,21 @@
 {
     public class Agent
     {
+        public int Id { get; set; }
         public string Name { get; set; }
         public double Efficiency { get; set; }
         public int Capacity { get; set; }
         public List<ChatSession> Chats { get; set; }
         public bool IsAvailable { get; set; }
 
-        public Agent(string name, double efficiency)
+        public Agent(int id, string name, double efficiency)
         {
-            this.Name = name;
-            this.Efficiency = efficiency;
-            this.Capacity = (int)(10 * efficiency);
-            this.Chats = new List<ChatSession>();
-            this.IsAvailable = true;
+            Id = id;
+            Name = name;
+            Efficiency = efficiency;
+            Capacity = (int)(10 * efficiency);
+            Chats = new List<ChatSession>();
+            IsAvailable = true;
         }
 
         public void MarkUnavailable()

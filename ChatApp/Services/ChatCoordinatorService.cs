@@ -18,7 +18,6 @@ namespace ChatApp.Services
             ArgumentNullException.ThrowIfNull(chatSession);
 
             chatSession.SessionId = GenerateSessionId();
-            chatSession.CreatedOn = DateTime.UtcNow;
             chatQueue.Enqueue(chatSession);
 
             // Find the next available agent to assign the chat request to.
