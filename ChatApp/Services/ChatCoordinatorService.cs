@@ -37,17 +37,30 @@ namespace ChatApp.Services
             if (chatQueue.Count > 0)
             {
                 var chatSession = chatQueue.Dequeue();
-                var availableAgent = teams.FirstOrDefault(a => a.Capacity > 0)?.Agents.FirstOrDefault();
+
+                var availableAgent = FindNextAvailableAgent();
 
                 if (availableAgent is not null)
                 {
                     // Assign chat session to available agent
-                    availableAgent.Capacity--;
+                    availableAgent.Chats.Add(chatSession);
+                    availableAgent.Capacity --;
                     return availableAgent.Name;
                 }
                 else return null;
             }
             else return null;
+        }
+
+        private Agent FindNextAvailableAgent()
+        {
+            var currentTeam = teams.Find(x => DateTime.UtcNow.TimeOfDay >= x.StartTime && DateTime.UtcNow.TimeOfDay < x.EndTime);
+            var sortedAgents = currentTeam?.Agents?.OrderByDescending(x => x.Efficiency);
+            if (sortedAgents.Any())
+            {
+
+            }
+            return null;
         }
 
         private int GenerateSessionId()
