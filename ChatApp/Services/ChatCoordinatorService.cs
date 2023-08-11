@@ -6,6 +6,7 @@ namespace ChatApp.Services
     {
         private readonly Queue<ChatSession> chatQueue;
         private readonly List<Team> teams;
+        int position = 0;
 
         public ChatCoordinatorService(Queue<ChatSession> chatQueue, List<Team> teams)
         {
@@ -55,10 +56,18 @@ namespace ChatApp.Services
         private Agent FindNextAvailableAgent()
         {
             var currentTeam = teams.Find(x => DateTime.UtcNow.TimeOfDay >= x.StartTime && DateTime.UtcNow.TimeOfDay < x.EndTime);
-            var sortedAgents = currentTeam?.Agents?.OrderByDescending(x => x.Efficiency);
-            if (sortedAgents.Any())
+            var agents = currentTeam?.Agents?.OrderByDescending(x => x.Efficiency).ToList();
+            if (agents.Any())
             {
 
+                int next = position % agents.Count();
+                while (agents[next].Efficiency < 0.4)
+                {
+                    next = (next + 1) % agents.Count;
+                }
+
+                position++;
+                return agents[next];
             }
             return null;
         }
