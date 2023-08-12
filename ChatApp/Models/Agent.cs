@@ -8,7 +8,8 @@
         public int Capacity { get; set; }
         public List<ChatSession> Chats { get; set; }
         public bool IsAvailable { get; set; }
-
+        public int? Load => Chats?.Count;
+        
         public Agent(int id, string name, double efficiency)
         {
             Id = id;

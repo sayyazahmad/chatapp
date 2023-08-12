@@ -14,16 +14,19 @@ namespace ChatApp.Controllers
         private readonly List<Team> teams;
         private readonly IChatCoordinatorService chatCoorinatorService;
         private readonly OfficeHoursSettings officeHours;
+        private readonly ILogger<ChatController> logger;
 
         public ChatController(Queue<ChatSession> chatQueue, 
-            List<Team> teams, 
-            IChatCoordinatorService chatCoordinatorService, 
-            IOptions<OfficeHoursSettings> options)
+            List<Team> teams,
+            IChatCoordinatorService chatCoordinatorService,
+            IOptions<OfficeHoursSettings> options,
+            ILogger<ChatController> logger)
         {
             this.chatQueue = chatQueue;
             this.teams = teams;
             this.chatCoorinatorService = chatCoordinatorService;
             this.officeHours = options.Value;
+            this.logger = logger;
         }
 
         [HttpPost("create")]
@@ -31,33 +34,54 @@ namespace ChatApp.Controllers
         {
             ArgumentNullException.ThrowIfNull(chatSession);
 
-            //check if it's not office hour
-            if (DateTime.UtcNow.TimeOfDay >= officeHours.Start && DateTime.UtcNow.TimeOfDay < officeHours.End)
+            try
             {
-                var res = chatCoorinatorService.CreateChatSession(chatSession);
-                return Ok("Ok");
-            }
-            else
-            {
-                //Check the capacity of current team and overflow team
                 var currentTeam = teams.Find(x => DateTime.UtcNow.TimeOfDay >= x.StartTime && DateTime.UtcNow.TimeOfDay < x.EndTime);
-                var overflowTeam = teams.Where(x => x.IsOverflow)?.FirstOrDefault();
-
-                if (chatQueue?.Count + 1 < ((currentTeam?.Capacity + overflowTeam?.Capacity) * 1.5))
+                //office hours
+                if (currentTeam?.StartTime >= officeHours.Start && currentTeam?.EndTime < officeHours.End)
                 {
-                    return BadRequest("Queue Full");
+                    if (chatQueue.Count >= currentTeam.Capacity)
+                    {
+                        var overflowTeam = teams.Where(x => x.IsOverflow)?.FirstOrDefault();
+                        if (overflowTeam is not null)
+                        {
+                            var res = chatCoorinatorService.CreateChatSession(chatSession);
+                            return Ok("Ok");
+                        }
+                        else return BadRequest("Queue Full");
+                    }
+                    else
+                    {
+                        var res = chatCoorinatorService.CreateChatSession(chatSession);
+                        return Ok("Ok");
+                    }
                 }
                 else
                 {
-                    var res = chatCoorinatorService.CreateChatSession(chatSession);
-                    return Ok("Ok");
+                    if (chatQueue?.Count >= currentTeam?.Capacity)
+                    {
+                        return BadRequest("Queue Full");
+                    }
+                    else
+                    {
+                        var res = chatCoorinatorService.CreateChatSession(chatSession);
+                        return Ok("Ok");
+                    }
                 }
+
+            }
+            catch (Exception)
+            {
+                return BadRequest();
             }
         }
 
         [HttpPost("assign")]
         public IActionResult AssignChatToAgent()
         {
+            try
+            {
+
             if (chatQueue.Count > 0)
             {
                 var res = chatCoorinatorService.AssignChatToAgent();
@@ -68,6 +92,12 @@ namespace ChatApp.Controllers
             }
             else
                 return BadRequest("No chat sessions in the queue.");
+
+            }
+            catch (Exception)
+            {
+                return BadRequest();
+            }
         }
     }
 }

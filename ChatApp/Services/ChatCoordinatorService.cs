@@ -6,12 +6,13 @@ namespace ChatApp.Services
     {
         private readonly Queue<ChatSession> chatQueue;
         private readonly List<Team> teams;
-        int position = 0;
+        private readonly ILogger<ChatCoordinatorService> logger;
 
-        public ChatCoordinatorService(Queue<ChatSession> chatQueue, List<Team> teams)
+        public ChatCoordinatorService(Queue<ChatSession> chatQueue, List<Team> teams, ILogger<ChatCoordinatorService> logger)
         {
             this.chatQueue = chatQueue;
             this.teams = teams;
+            this.logger = logger;
         }
 
         public string? CreateChatSession(ChatSession chatSession)
@@ -21,15 +22,6 @@ namespace ChatApp.Services
             chatSession.SessionId = GenerateSessionId();
             chatQueue.Enqueue(chatSession);
 
-            // Find the next available agent to assign the chat request to.
-            //Agent agent = await this.FindNextAvailableAgent();
-
-            //// Assign the chat request to the agent.
-            //agent.Chats.Add(chatRequest);
-
-            //// Notify the agent that they have a new chat request.
-            //agent.Notify();
-
             return "Ok";
         }
 
@@ -37,37 +29,21 @@ namespace ChatApp.Services
         {
             if (chatQueue.Count > 0)
             {
-                var chatSession = chatQueue.Dequeue();
-
-                var availableAgent = FindNextAvailableAgent();
-
-                if (availableAgent is not null)
+                var team = teams.Find(x => DateTime.UtcNow.TimeOfDay >= x.StartTime && DateTime.UtcNow.TimeOfDay < x.EndTime);
+                if (team?.Agents?.Any() ?? false)
                 {
-                    // Assign chat session to available agent
-                    availableAgent.Chats.Add(chatSession);
-                    availableAgent.Capacity --;
-                    return availableAgent.Name;
+                    foreach (var agentGroup in team.Agents.OrderBy(x => x.Efficiency).GroupBy(x => x.Efficiency).Select(grp => grp.ToList()).ToList())
+                    {
+                        for (int i = 0; i < agentGroup.Count; i++)
+                        {
+                            if (agentGroup[i].Load < agentGroup[i].Capacity)
+                            {
+                                agentGroup[i].Chats.Add(chatQueue.Dequeue());
+                                return agentGroup[i].Name;
+                            }
+                        }
+                    }
                 }
-                else return null;
-            }
-            else return null;
-        }
-
-        private Agent FindNextAvailableAgent()
-        {
-            var currentTeam = teams.Find(x => DateTime.UtcNow.TimeOfDay >= x.StartTime && DateTime.UtcNow.TimeOfDay < x.EndTime);
-            var agents = currentTeam?.Agents?.OrderByDescending(x => x.Efficiency).ToList();
-            if (agents.Any())
-            {
-
-                int next = position % agents.Count();
-                while (agents[next].Efficiency < 0.4)
-                {
-                    next = (next + 1) % agents.Count;
-                }
-
-                position++;
-                return agents[next];
             }
             return null;
         }
