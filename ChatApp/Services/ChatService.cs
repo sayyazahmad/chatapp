@@ -2,13 +2,13 @@
 
 namespace ChatApp.Services
 {
-    public class ChatCoordinatorService : IChatCoordinatorService
+    public class ChatService : IChatService
     {
         private readonly Queue<ChatSession> chatQueue;
         private readonly List<Team> teams;
-        private readonly ILogger<ChatCoordinatorService> logger;
+        private readonly ILogger<ChatService> logger;
 
-        public ChatCoordinatorService(Queue<ChatSession> chatQueue, List<Team> teams, ILogger<ChatCoordinatorService> logger)
+        public ChatService(Queue<ChatSession> chatQueue, List<Team> teams, ILogger<ChatService> logger)
         {
             this.chatQueue = chatQueue;
             this.teams = teams;

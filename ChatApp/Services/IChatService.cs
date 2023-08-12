@@ -2,7 +2,7 @@
 
 namespace ChatApp.Services
 {
-    public interface IChatCoordinatorService
+    public interface IChatService
     {
         string? CreateChatSession(ChatSession chatSession);
         string? AssignChatToAgent();

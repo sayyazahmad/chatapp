@@ -14,7 +14,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddSingleton<List<Team>>(Initializer.InitializeTeams());
 builder.Services.AddSingleton<Queue<ChatSession>>();
-builder.Services.AddScoped<IChatCoordinatorService, ChatCoordinatorService>();
+builder.Services.AddScoped<IChatService, ChatService>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

@@ -12,19 +12,19 @@ namespace ChatApp.Controllers
     {
         private readonly Queue<ChatSession> chatQueue;
         private readonly List<Team> teams;
-        private readonly IChatCoordinatorService chatCoorinatorService;
+        private readonly IChatService chatService;
         private readonly OfficeHoursSettings officeHours;
         private readonly ILogger<ChatController> logger;
 
         public ChatController(Queue<ChatSession> chatQueue, 
             List<Team> teams,
-            IChatCoordinatorService chatCoordinatorService,
+            IChatService chatService,
             IOptions<OfficeHoursSettings> options,
             ILogger<ChatController> logger)
         {
             this.chatQueue = chatQueue;
             this.teams = teams;
-            this.chatCoorinatorService = chatCoordinatorService;
+            this.chatService = chatService;
             this.officeHours = options.Value;
             this.logger = logger;
         }
@@ -45,14 +45,14 @@ namespace ChatApp.Controllers
                         var overflowTeam = teams.Where(x => x.IsOverflow)?.FirstOrDefault();
                         if (overflowTeam is not null)
                         {
-                            var res = chatCoorinatorService.CreateChatSession(chatSession);
+                            var res = chatService.CreateChatSession(chatSession);
                             return Ok("Ok");
                         }
                         else return BadRequest("Queue Full");
                     }
                     else
                     {
-                        var res = chatCoorinatorService.CreateChatSession(chatSession);
+                        var res = chatService.CreateChatSession(chatSession);
                         return Ok("Ok");
                     }
                 }
@@ -64,7 +64,7 @@ namespace ChatApp.Controllers
                     }
                     else
                     {
-                        var res = chatCoorinatorService.CreateChatSession(chatSession);
+                        var res = chatService.CreateChatSession(chatSession);
                         return Ok("Ok");
                     }
                 }
@@ -84,7 +84,7 @@ namespace ChatApp.Controllers
 
             if (chatQueue.Count > 0)
             {
-                var res = chatCoorinatorService.AssignChatToAgent();
+                var res = chatService.AssignChatToAgent();
                 if (!string.IsNullOrEmpty(res))
                     return Ok(res);
                 else
