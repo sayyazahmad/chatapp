@@ -29,6 +29,11 @@ namespace ChatApp.Controllers
             this.logger = logger;
         }
 
+        /// <summary>
+        /// API endpointe to register new chat session
+        /// </summary>
+        /// <param name="chatSession">New chat session object from client</param>
+        /// <returns>Retuns ok if queue if available</returns>
         [HttpPost("create")]
         public IActionResult CreateChatSession(ChatSession chatSession)
         {
@@ -70,12 +75,17 @@ namespace ChatApp.Controllers
                 }
 
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return BadRequest();
+                logger.LogError($"Error executing {nameof(CreateChatSession)}: {ex.Message}");
+                return StatusCode(500);
             }
         }
 
+        /// <summary>
+        /// API endpoint to trigger chat session assignment service
+        /// </summary>
+        /// <returns></returns>
         [HttpPost("assign")]
         public IActionResult AssignChatToAgent()
         {
@@ -96,7 +106,8 @@ namespace ChatApp.Controllers
             }
             catch (Exception)
             {
-                return BadRequest();
+                logger.LogError($"Error executing {nameof(CreateChatSession)}: {ex.Message}");
+                return StatusCode(500);
             }
         }
     }

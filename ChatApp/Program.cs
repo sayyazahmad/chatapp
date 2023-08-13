@@ -9,7 +9,6 @@ builder.Services.Configure<OfficeHoursSettings>(builder.Configuration.GetSection
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddSingleton<List<Team>>(Initializer.InitializeTeams());
 builder.Services.AddSingleton<Queue<ChatSession>>();
 builder.Services.AddScoped<IChatService, ChatService>();
 builder.Services.AddHostedService<ChatCoordinatorHostedService>();
@@ -17,6 +16,7 @@ var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
+    builder.Services.AddSingleton<List<Team>>(Initializer.InitializeTeams());
     app.UseSwagger();
     app.UseSwaggerUI();
 }

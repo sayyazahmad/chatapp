@@ -14,9 +14,9 @@
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            logger.LogInformation("Timed Hosted Service running.");
+            logger.LogInformation("Chat Coordinator Service running.");
 
-            timer = new Timer(ProcessChat, null, TimeSpan.Zero, TimeSpan.FromSeconds(10));
+            timer = new Timer(ProcessChat, null, TimeSpan.Zero, TimeSpan.FromSeconds(5));
 
             return Task.CompletedTask;
         }
