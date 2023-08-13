@@ -1,5 +1,9 @@
 ﻿namespace ChatApp.Services
 {
+    /// <summary>
+    /// Background job that pools every second for any new chat sessions, if available the service 
+    /// then assigns chat to next available agent in round robin fashion.
+    /// </summary>
     public class ChatCoordinatorHostedService : IHostedService, IDisposable
     {
         private readonly ILogger<ChatCoordinatorHostedService> logger;
@@ -16,20 +20,18 @@
         {
             logger.LogInformation("Chat Coordinator Service running.");
 
-            timer = new Timer(ProcessChat, null, TimeSpan.Zero, TimeSpan.FromSeconds(5));
+            timer = new Timer(ProcessChat, null, TimeSpan.Zero, TimeSpan.FromSeconds(100));
 
             return Task.CompletedTask;
         }
 
         private void ProcessChat(object? state)
         {
-            using (IServiceScope scope = serviceProvider.CreateScope())
-            {
-                IChatService chatService = scope.ServiceProvider.GetRequiredService<IChatService>();
+            using IServiceScope scope = serviceProvider.CreateScope();
+            IChatService chatService = scope.ServiceProvider.GetRequiredService<IChatService>();
+            var agent = chatService.AssignChatToAgent();
 
-                chatService.AssignChatToAgent();
-            }
-            logger.LogInformation($"Chat Proccessed");
+            logger.LogInformation($"Chat assigned to {agent} at:{DateTime.UtcNow}");
         }
 
         public Task StopAsync(CancellationToken cancellationToken)

@@ -6,5 +6,6 @@ namespace ChatApp.Services
     {
         string? CreateChatSession(ChatSession chatSession);
         string? AssignChatToAgent();
+        bool EndChatSession(Agent agent, ChatSession chat);
     }
 }

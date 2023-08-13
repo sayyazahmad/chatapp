@@ -2,6 +2,10 @@
 
 namespace ChatApp.Services
 {
+    /// <summary>
+    /// Implementation of IChatService.
+    /// 
+    /// </summary>
     public class ChatService : IChatService
     {
         private readonly Queue<ChatSession> chatQueue;
@@ -20,6 +24,7 @@ namespace ChatApp.Services
             ArgumentNullException.ThrowIfNull(chatSession);
 
             chatSession.SessionId = GenerateSessionId();
+            chatSession.CreatedOn = DateTime.UtcNow;
             chatQueue.Enqueue(chatSession);
 
             return "Ok";
@@ -32,20 +37,31 @@ namespace ChatApp.Services
                 var team = teams.Find(x => DateTime.UtcNow.TimeOfDay >= x.StartTime && DateTime.UtcNow.TimeOfDay < x.EndTime);
                 if (team?.Agents?.Any() ?? false)
                 {
+                    //Break teams into subgroups based on agent efficiency. Traverse all the groups starting from lower efficiencey.
                     foreach (var agentGroup in team.Agents.OrderBy(x => x.Efficiency).GroupBy(x => x.Efficiency).Select(grp => grp.ToList()).ToList())
                     {
                         for (int i = 0; i < agentGroup.Count; i++)
                         {
                             if (agentGroup[i].Load < agentGroup[i].Capacity)
                             {
+                                //Chat session assignment agent
                                 agentGroup[i].Chats.Add(chatQueue.Dequeue());
-                                return agentGroup[i].Name;
+                                // *** TODO ***
+                                //Send chat assignment notification to agent
+                                return $"{team.Name}->{agentGroup[i].Name}";
                             }
                         }
                     }
                 }
             }
             return null;
+        }
+
+        public bool EndChatSession(Agent agent, ChatSession chat)
+        {
+            ArgumentNullException.ThrowIfNull(agent);
+            ArgumentNullException.ThrowIfNull(chat);
+            return agent.Chats.Remove(chat);
         }
 
         private int GenerateSessionId()

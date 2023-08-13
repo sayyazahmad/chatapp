@@ -30,10 +30,10 @@ namespace ChatApp.Controllers
         }
 
         /// <summary>
-        /// API endpointe to register new chat session
+        /// API endpoint to register new chat session
         /// </summary>
         /// <param name="chatSession">New chat session object from client</param>
-        /// <returns>Retuns ok if queue if available</returns>
+        /// <returns>Endpoint registers chat session into chat queue and returns Ok. If the queue if full No available agent message is returned.</returns>
         [HttpPost("create")]
         public IActionResult CreateChatSession(ChatSession chatSession)
         {
@@ -41,11 +41,12 @@ namespace ChatApp.Controllers
 
             try
             {
-                var currentTeam = teams.Find(x => DateTime.UtcNow.TimeOfDay >= x.StartTime && DateTime.UtcNow.TimeOfDay < x.EndTime);
+                //team working in current shift
+                var team = teams.Find(x => DateTime.UtcNow.TimeOfDay >= x.StartTime && DateTime.UtcNow.TimeOfDay < x.EndTime);
                 //office hours
-                if (currentTeam?.StartTime >= officeHours.Start && currentTeam?.EndTime < officeHours.End)
+                if (team?.StartTime >= officeHours.Start && team?.EndTime < officeHours.End)
                 {
-                    if (chatQueue.Count >= currentTeam.Capacity)
+                    if (chatQueue.Count >= team.Capacity)
                     {
                         var overflowTeam = teams.Where(x => x.IsOverflow)?.FirstOrDefault();
                         if (overflowTeam is not null)
@@ -53,7 +54,7 @@ namespace ChatApp.Controllers
                             var res = chatService.CreateChatSession(chatSession);
                             return Ok("Ok");
                         }
-                        else return BadRequest("Queue Full");
+                        else return BadRequest("No agent available");
                     }
                     else
                     {
@@ -63,9 +64,9 @@ namespace ChatApp.Controllers
                 }
                 else
                 {
-                    if (chatQueue?.Count >= currentTeam?.Capacity)
+                    if (chatQueue?.Count >= team?.Capacity)
                     {
-                        return BadRequest("Queue Full");
+                        return BadRequest("No agent available");
                     }
                     else
                     {
@@ -84,27 +85,27 @@ namespace ChatApp.Controllers
 
         /// <summary>
         /// API endpoint to trigger chat session assignment service
+        /// Assignment service then assigns chat to next available agent in round robin fashion.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>If chat assigned successfully, the API returns team name -> agent name, returns 400-BadRequest instead </returns>
         [HttpPost("assign")]
         public IActionResult AssignChatToAgent()
         {
             try
             {
-
-            if (chatQueue.Count > 0)
-            {
-                var res = chatService.AssignChatToAgent();
-                if (!string.IsNullOrEmpty(res))
-                    return Ok(res);
+                if (chatQueue.Count > 0)
+                {
+                    var res = chatService.AssignChatToAgent();
+                    if (!string.IsNullOrEmpty(res))
+                        return Ok(res);
+                    else
+                        return BadRequest("Agent not available.");
+                }
                 else
                     return BadRequest("No chat sessions in the queue.");
-            }
-            else
-                return BadRequest("No chat sessions in the queue.");
 
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 logger.LogError($"Error executing {nameof(CreateChatSession)}: {ex.Message}");
                 return StatusCode(500);

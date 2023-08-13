@@ -19,18 +19,5 @@
             Chats = new List<ChatSession>();
             IsAvailable = true;
         }
-
-        public void MarkUnavailable()
-        {
-            this.IsAvailable = false;
-        }
-    }
-
-    public enum SeniorityLevel
-    {
-        Junior,
-        MidLevel,
-        Senior,
-        TeamLead
     }
 }
