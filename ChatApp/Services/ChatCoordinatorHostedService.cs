@@ -20,7 +20,7 @@
         {
             logger.LogInformation("Chat Coordinator Service running.");
 
-            timer = new Timer(ProcessChat, null, TimeSpan.Zero, TimeSpan.FromSeconds(100));
+            timer = new Timer(ProcessChat, null, TimeSpan.Zero, TimeSpan.FromSeconds(1));
 
             return Task.CompletedTask;
         }
