@@ -4,7 +4,6 @@ namespace ChatApp.Services
 {
     /// <summary>
     /// Implementation of IChatService.
-    /// 
     /// </summary>
     public class ChatService : IChatService
     {
@@ -19,6 +18,11 @@ namespace ChatApp.Services
             this.logger = logger;
         }
 
+        /// <summary>
+        /// Business logic to register a new chat session
+        /// </summary>
+        /// <param name="chatSession">New chat session object from client</param>
+        /// <returns>Method registers chat session into chat queue and returns Ok</returns>
         public string? CreateChatSession(ChatSession chatSession)
         {
             ArgumentNullException.ThrowIfNull(chatSession);
@@ -30,10 +34,16 @@ namespace ChatApp.Services
             return "Ok";
         }
 
+        /// <summary>
+        /// Business logic to assign chat session to an agent.
+        /// Looks for the next available agent and assigns chat session in round robin fashion.
+        /// </summary>
+        /// <returns>Method returns team name -> agent name</returns>
         public string? AssignChatToAgent()
         {
             if (chatQueue.Count > 0)
             {
+                //team working in current shift
                 var team = teams.Find(x => DateTime.UtcNow.TimeOfDay >= x.StartTime && DateTime.UtcNow.TimeOfDay < x.EndTime);
                 if (team?.Agents?.Any() ?? false)
                 {
@@ -57,6 +67,13 @@ namespace ChatApp.Services
             return null;
         }
 
+        /// <summary>
+        /// Business logic to end a chat session
+        /// Method ends a chat session with agent and make agent available for next session
+        /// </summary>
+        /// <param name="agent">Agent that holds session</param>
+        /// <param name="chat">Chat session that agent hold, and wants to end.</param>
+        /// <returns>Returns boolean confirming the end of session</returns>
         public bool EndChatSession(Agent agent, ChatSession chat)
         {
             ArgumentNullException.ThrowIfNull(agent);

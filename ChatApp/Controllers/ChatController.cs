@@ -6,6 +6,10 @@ using Microsoft.Extensions.Options;
 
 namespace ChatApp.Controllers
 {
+    /// <summary>
+    /// REST API to expose endpoints to create new chat session
+    /// and assign chat session to agent
+    /// </summary>
     [Route("api/chat")]
     [ApiController]
     public class ChatController : ControllerBase
@@ -33,7 +37,8 @@ namespace ChatApp.Controllers
         /// API endpoint to register new chat session
         /// </summary>
         /// <param name="chatSession">New chat session object from client</param>
-        /// <returns>Endpoint registers chat session into chat queue and returns Ok. If the queue if full No available agent message is returned.</returns>
+        /// <returns>Endpoint registers chat session into chat queue and returns Ok. 
+        /// If the queue if full No available agent message is returned.</returns>
         [HttpPost("create")]
         public IActionResult CreateChatSession(ChatSession chatSession)
         {
